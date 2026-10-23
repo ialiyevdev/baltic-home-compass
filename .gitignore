@@ -1,0 +1,63 @@
+# Private configuration and credentials
+.env
+.env.*
+!.env.example
+.envrc
+.secrets/
+secrets/
+private/
+credentials.json
+credentials.*.json
+*.pem
+*.key
+*.p12
+*.pfx
+.ssh/
+
+# Local runtime, PostgreSQL data and recovery copies
+.local/
+/pgdata/
+/backups/
+/recovery/
+*.dump
+*.backup
+*.sql.dump
+*.sql.gz
+*.sql.bak
+
+# Python environments and generated files
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+build/
+
+# Frontend dependencies, builds and test output
+node_modules/
+dist/
+.vite/
+coverage/
+*.tsbuildinfo
+frontend/playwright-report/
+frontend/test-results/
+
+# Personal editor settings and temporary files
+.vscode/
+.idea/
+*.code-workspace
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini

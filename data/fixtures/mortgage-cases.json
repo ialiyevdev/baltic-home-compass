@@ -1,0 +1,744 @@
+{
+  "spec_version": "1",
+  "purpose": "Synthetic financial reference scenarios, not official statistical observations. Expected payments independently computed with 65-digit Decimal arithmetic.",
+  "cases": [
+    {
+      "name": "standard",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 150000,
+        "down_payment": {
+          "mode": "percent",
+          "value": 20
+        },
+        "annual_rate": 4,
+        "term_years": 25,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 30000.0,
+        "loan_principal": 120000.0,
+        "monthly_payment": 633.4,
+        "total_interest": 70022.25,
+        "total_repayment": 190022.25,
+        "final_payment": 635.65,
+        "number_of_payments": 300,
+        "first_payment": {
+          "month": 1,
+          "payment": 633.4,
+          "principal": 233.4,
+          "interest": 400.0,
+          "balance": 119766.6,
+          "cumulative_interest": 400.0
+        },
+        "last_payment": {
+          "month": 300,
+          "payment": 635.65,
+          "principal": 633.54,
+          "interest": 2.11,
+          "balance": 0.0,
+          "cumulative_interest": 70022.25
+        }
+      }
+    },
+    {
+      "name": "zero_interest",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 12000,
+        "down_payment": {
+          "mode": "amount",
+          "value": 0
+        },
+        "annual_rate": 0,
+        "term_years": 1,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 0.0,
+        "loan_principal": 12000.0,
+        "monthly_payment": 1000.0,
+        "total_interest": 0.0,
+        "total_repayment": 12000.0,
+        "final_payment": 1000.0,
+        "number_of_payments": 12,
+        "first_payment": {
+          "month": 1,
+          "payment": 1000.0,
+          "principal": 1000.0,
+          "interest": 0.0,
+          "balance": 11000.0,
+          "cumulative_interest": 0.0
+        },
+        "last_payment": {
+          "month": 12,
+          "payment": 1000.0,
+          "principal": 1000.0,
+          "interest": 0.0,
+          "balance": 0.0,
+          "cumulative_interest": 0.0
+        }
+      }
+    },
+    {
+      "name": "full_cash",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 150000,
+        "down_payment": {
+          "mode": "amount",
+          "value": 150000
+        },
+        "annual_rate": 4,
+        "term_years": 25,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 150000.0,
+        "loan_principal": 0.0,
+        "monthly_payment": 0.0,
+        "total_interest": 0.0,
+        "total_repayment": 0.0,
+        "final_payment": 0,
+        "number_of_payments": 0,
+        "first_payment": null,
+        "last_payment": null
+      }
+    },
+    {
+      "name": "zero_price",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 0,
+        "down_payment": {
+          "mode": "percent",
+          "value": 20
+        },
+        "annual_rate": 4,
+        "term_years": 25,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 0.0,
+        "loan_principal": 0.0,
+        "monthly_payment": 0.0,
+        "total_interest": 0.0,
+        "total_repayment": 0.0,
+        "final_payment": 0,
+        "number_of_payments": 0,
+        "first_payment": null,
+        "last_payment": null
+      }
+    },
+    {
+      "name": "six_month_term",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 10000,
+        "down_payment": {
+          "mode": "percent",
+          "value": 20
+        },
+        "annual_rate": 4,
+        "term_years": 0.5,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 2000.0,
+        "loan_principal": 8000.0,
+        "monthly_payment": 1348.93,
+        "total_interest": 93.6,
+        "total_repayment": 8093.6,
+        "final_payment": 1348.95,
+        "number_of_payments": 6,
+        "first_payment": {
+          "month": 1,
+          "payment": 1348.93,
+          "principal": 1322.26,
+          "interest": 26.67,
+          "balance": 6677.74,
+          "cumulative_interest": 26.67
+        },
+        "last_payment": {
+          "month": 6,
+          "payment": 1348.95,
+          "principal": 1344.47,
+          "interest": 4.48,
+          "balance": 0.0,
+          "cumulative_interest": 93.6
+        }
+      }
+    },
+    {
+      "name": "sixty_year_term",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 150000,
+        "down_payment": {
+          "mode": "percent",
+          "value": 20
+        },
+        "annual_rate": 0.01,
+        "term_years": 60,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 30000.0,
+        "loan_principal": 120000.0,
+        "monthly_payment": 167.17,
+        "total_interest": 360.86,
+        "total_repayment": 120360.86,
+        "final_payment": 165.63,
+        "number_of_payments": 720,
+        "first_payment": {
+          "month": 1,
+          "payment": 167.17,
+          "principal": 166.17,
+          "interest": 1.0,
+          "balance": 119833.83,
+          "cumulative_interest": 1.0
+        },
+        "last_payment": {
+          "month": 720,
+          "payment": 165.63,
+          "principal": 165.63,
+          "interest": 0.0,
+          "balance": 0.0,
+          "cumulative_interest": 360.86
+        }
+      }
+    },
+    {
+      "name": "extreme_final_reconciliation",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 100,
+        "down_payment": {
+          "mode": "amount",
+          "value": 0
+        },
+        "annual_rate": 100,
+        "term_years": 60,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 0.0,
+        "loan_principal": 100.0,
+        "monthly_payment": 8.33,
+        "total_interest": 5997.6,
+        "total_repayment": 6097.6,
+        "final_payment": 108.33,
+        "number_of_payments": 720,
+        "first_payment": {
+          "month": 1,
+          "payment": 8.33,
+          "principal": 0.0,
+          "interest": 8.33,
+          "balance": 100.0,
+          "cumulative_interest": 8.33
+        },
+        "last_payment": {
+          "month": 720,
+          "payment": 108.33,
+          "principal": 100.0,
+          "interest": 8.33,
+          "balance": 0.0,
+          "cumulative_interest": 5997.6
+        }
+      }
+    },
+    {
+      "name": "large_loan",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 1000000000,
+        "down_payment": {
+          "mode": "percent",
+          "value": 20
+        },
+        "annual_rate": 4,
+        "term_years": 25,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 200000000.0,
+        "loan_principal": 800000000.0,
+        "monthly_payment": 4222694.72,
+        "total_interest": 466808417.36,
+        "total_repayment": 1266808417.36,
+        "final_payment": 4222696.08,
+        "number_of_payments": 300,
+        "first_payment": {
+          "month": 1,
+          "payment": 4222694.72,
+          "principal": 1556028.05,
+          "interest": 2666666.67,
+          "balance": 798443971.95,
+          "cumulative_interest": 2666666.67
+        },
+        "last_payment": {
+          "month": 300,
+          "payment": 4222696.08,
+          "principal": 4208667.19,
+          "interest": 14028.89,
+          "balance": 0.0,
+          "cumulative_interest": 466808417.36
+        }
+      }
+    },
+    {
+      "name": "fractional_down_payment",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 123456.78,
+        "down_payment": {
+          "mode": "percent",
+          "value": 12.345678
+        },
+        "annual_rate": 3.456789,
+        "term_years": 25,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 15241.58,
+        "loan_principal": 108215.2,
+        "monthly_payment": 539.25,
+        "total_interest": 53557.85,
+        "total_repayment": 161773.05,
+        "final_payment": 537.3,
+        "number_of_payments": 300,
+        "first_payment": {
+          "month": 1,
+          "payment": 539.25,
+          "principal": 227.52,
+          "interest": 311.73,
+          "balance": 107987.68,
+          "cumulative_interest": 311.73
+        },
+        "last_payment": {
+          "month": 300,
+          "payment": 537.3,
+          "principal": 535.76,
+          "interest": 1.54,
+          "balance": 0.0,
+          "cumulative_interest": 53557.85
+        }
+      }
+    },
+    {
+      "name": "near_zero_rate",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 150000,
+        "down_payment": {
+          "mode": "percent",
+          "value": 20
+        },
+        "annual_rate": 1e-06,
+        "term_years": 25,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 30000.0,
+        "loan_principal": 120000.0,
+        "monthly_payment": 400.0,
+        "total_interest": 0.0,
+        "total_repayment": 120000.0,
+        "final_payment": 400.0,
+        "number_of_payments": 300,
+        "first_payment": {
+          "month": 1,
+          "payment": 400.0,
+          "principal": 400.0,
+          "interest": 0.0,
+          "balance": 119600.0,
+          "cumulative_interest": 0.0
+        },
+        "last_payment": {
+          "month": 300,
+          "payment": 400.0,
+          "principal": 400.0,
+          "interest": 0.0,
+          "balance": 0.0,
+          "cumulative_interest": 0.0
+        }
+      }
+    },
+    {
+      "name": "zero_income",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 150000,
+        "down_payment": {
+          "mode": "percent",
+          "value": 20
+        },
+        "annual_rate": 4,
+        "term_years": 25,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": 0,
+        "monthly_debts": 200,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 30000.0,
+        "loan_principal": 120000.0,
+        "monthly_payment": 633.4,
+        "total_interest": 70022.25,
+        "total_repayment": 190022.25,
+        "final_payment": 635.65,
+        "number_of_payments": 300,
+        "first_payment": {
+          "month": 1,
+          "payment": 633.4,
+          "principal": 233.4,
+          "interest": 400.0,
+          "balance": 119766.6,
+          "cumulative_interest": 400.0
+        },
+        "last_payment": {
+          "month": 300,
+          "payment": 635.65,
+          "principal": 633.54,
+          "interest": 2.11,
+          "balance": 0.0,
+          "cumulative_interest": 70022.25
+        }
+      }
+    },
+    {
+      "name": "negative_remaining_budget",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 150000,
+        "down_payment": {
+          "mode": "percent",
+          "value": 20
+        },
+        "annual_rate": 4,
+        "term_years": 25,
+        "monthly_property_expenses": 100,
+        "one_time_costs": 2500,
+        "monthly_income": 1000,
+        "monthly_debts": 1200,
+        "monthly_living_expenses": 500,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 30000.0,
+        "loan_principal": 120000.0,
+        "monthly_payment": 633.4,
+        "total_interest": 70022.25,
+        "total_repayment": 190022.25,
+        "final_payment": 635.65,
+        "number_of_payments": 300,
+        "first_payment": {
+          "month": 1,
+          "payment": 633.4,
+          "principal": 233.4,
+          "interest": 400.0,
+          "balance": 119766.6,
+          "cumulative_interest": 400.0
+        },
+        "last_payment": {
+          "month": 300,
+          "payment": 635.65,
+          "principal": 633.54,
+          "interest": 2.11,
+          "balance": 0.0,
+          "cumulative_interest": 70022.25
+        }
+      }
+    },
+    {
+      "name": "reverse_fixed_deposit",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 150000,
+        "down_payment": {
+          "mode": "amount",
+          "value": 30000
+        },
+        "annual_rate": 4,
+        "term_years": 25,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 30000.0,
+        "loan_principal": 120000.0,
+        "monthly_payment": 633.4,
+        "total_interest": 70022.25,
+        "total_repayment": 190022.25,
+        "final_payment": 635.65,
+        "number_of_payments": 300,
+        "first_payment": {
+          "month": 1,
+          "payment": 633.4,
+          "principal": 233.4,
+          "interest": 400.0,
+          "balance": 119766.6,
+          "cumulative_interest": 400.0
+        },
+        "last_payment": {
+          "month": 300,
+          "payment": 635.65,
+          "principal": 633.54,
+          "interest": 2.11,
+          "balance": 0.0,
+          "cumulative_interest": 70022.25
+        }
+      }
+    },
+    {
+      "name": "half_cent_interest",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 1,
+        "down_payment": {
+          "mode": "amount",
+          "value": 0
+        },
+        "annual_rate": 6,
+        "term_years": 1,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 0.0,
+        "loan_principal": 1.0,
+        "monthly_payment": 0.09,
+        "total_interest": 0.01,
+        "total_repayment": 1.01,
+        "final_payment": 0.02,
+        "number_of_payments": 12,
+        "first_payment": {
+          "month": 1,
+          "payment": 0.09,
+          "principal": 0.08,
+          "interest": 0.01,
+          "balance": 0.92,
+          "cumulative_interest": 0.01
+        },
+        "last_payment": {
+          "month": 12,
+          "payment": 0.02,
+          "principal": 0.02,
+          "interest": 0.0,
+          "balance": 0.0,
+          "cumulative_interest": 0.01
+        }
+      }
+    },
+    {
+      "name": "hundred_percent_deposit",
+      "input": {
+        "spec_version": "1",
+        "country": "LV",
+        "property_price": 150000,
+        "down_payment": {
+          "mode": "percent",
+          "value": 100
+        },
+        "annual_rate": 4,
+        "term_years": 25,
+        "monthly_property_expenses": 0,
+        "one_time_costs": 0,
+        "monthly_income": null,
+        "monthly_debts": 0,
+        "monthly_living_expenses": 0,
+        "housing_threshold": 30,
+        "desired_monthly_payment": 600,
+        "rate_offsets": [
+          -1,
+          1,
+          2,
+          3
+        ]
+      },
+      "expected": {
+        "down_payment": 150000.0,
+        "loan_principal": 0.0,
+        "monthly_payment": 0.0,
+        "total_interest": 0.0,
+        "total_repayment": 0.0,
+        "final_payment": 0,
+        "number_of_payments": 0,
+        "first_payment": null,
+        "last_payment": null
+      }
+    }
+  ]
+}

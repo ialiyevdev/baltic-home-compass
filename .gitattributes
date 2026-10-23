@@ -1,0 +1,6 @@
+* text=auto
+
+# Preserve checksummed migrations and reproducible official data byte for byte.
+database/migrations/*.sql -text
+data/snapshots/* -text
+frontend/public/data/* -text

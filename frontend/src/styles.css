@@ -443,7 +443,7 @@ tbody th { font-weight: 400; }
 #page-title, .calculator-section h2 { scroll-margin-top: 24px; }
 .main-navigation a:focus-visible { outline-offset: -5px; }
 @media (max-width: 760px) {
-  .main-navigation { gap: 22px; }
+  .main-navigation { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 22px; overflow: visible; }
   .main-navigation a { font-size: 13px; }
   .brand-subtitle { font-size: 10px; letter-spacing: 1px; }
   .chart-toolbar { flex-wrap: wrap; }

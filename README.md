@@ -1,12 +1,61 @@
 # Baltic Home Compass
 
-A portfolio project comparing housing and household economic indicators in Estonia, Latvia and Lithuania. It uses official statistics rather than property listings. A house-price index describes price changes; it does not estimate the asking price of a home.
+A portfolio project comparing housing and household economic indicators in Estonia, Latvia and Lithuania. It brings official statistics and personal mortgage scenarios into one interface, while keeping their definitions separate. A house-price index describes price changes; it does not estimate the asking price of a home.
 
-## Local foundation and official data
+The challenge is comparison: earnings, property indices, consumer prices and borrowing rates use different units, dates and methods. Baltic Home Compass makes those differences visible instead of turning them into a single affordability score.
 
-React/TypeScript, FastAPI and PostgreSQL run directly on Windows. The ingestion pipeline retrieves official Eurostat measurements, validates them, stores their provenance and exports a static dataset for the comparison interface. Country, indicator and date filters, charts, a data table, CSV download and source notes share the same data definitions.
+## What it does
 
-The catalogue contains eleven indicators and aligned comparisons of housing, earnings, consumer prices and household economic conditions. The Analytics page includes country rankings for a shared base and end period. Phase 4 adds a linked mortgage, household budget, reverse purchase budget, rate-scenario and amortization experience. All calculator defaults are hypothetical examples, separate from official statistics.
+- **Compare Countries:** eleven Eurostat and ECB indicators, country/date filters, charts, accessible tables and CSV exports.
+- **Analytics:** fourteen selections covering common-period changes, housing versus earnings, HICP-adjusted trends and country rankings.
+- **Calculators:** mortgage payments, household ratios, reverse purchase budgets, rate scenarios and reconciled amortization schedules. Defaults are hypothetical examples.
+- **Data & Methodology:** official definitions, units, source flags, completeness, observation dates and retrieval history.
+
+The committed data contains **1,155 observations**. The public build reads a dated statistical snapshot and calculates financial scenarios in the browser. The full FastAPI/PostgreSQL implementation remains available for local ingestion and API development. No public deployment has been made as part of this release preparation.
+
+[Deployment guide](docs/deployment.md) · [Portfolio descriptions and screenshots](docs/portfolio.md) · [Release verification](docs/release-verification.md) · [Calculation specification](docs/calculations.md)
+
+## Try the static application
+
+Install Node.js **24.16.0** (the version pinned in `frontend/.node-version`), then run:
+
+```powershell
+cd frontend
+npm.cmd ci
+npm.cmd run build:static
+npm.cmd run verify:static
+npm.cmd run preview
+```
+
+Open <http://127.0.0.1:4173>. This workflow uses committed exports and needs no Python, PostgreSQL, environment file or Docker. Use the HTTP preview server; opening `dist/index.html` directly cannot load JSON with browser fetch. Hash links such as `/#analytics` and `/#calculators/amortization` can be copied and reopened without a server-side router.
+
+## Architecture and technology choices
+
+```mermaid
+flowchart LR
+    E[Eurostat JSON-stat and ECB CSV] --> P[Python retrieval and validation]
+    P --> S[Attributed raw snapshots]
+    P --> DB[(PostgreSQL)]
+    DB --> A[FastAPI and Python analytics]
+    DB --> X[Deterministic JSON and CSV export]
+    A --> R[React interface in API mode]
+    X --> D[React static demo]
+    F[Versioned financial specification] --> T[TypeScript browser calculations]
+    F --> M[Stateless Python calculations]
+    T --> D
+    M --> A
+```
+
+| Technology | Role and reason |
+| --- | --- |
+| React, TypeScript and Vite | Interactive filters and forms, typed data contracts, and a standalone production build |
+| Tailwind CSS and Recharts | Consistent responsive styling and charts, supported by text summaries and tables |
+| Python, httpx and pandas | Official API retrieval, explicit validation, transformation and repeatable exports |
+| FastAPI, Pydantic and psycopg | Typed HTTP endpoints and direct PostgreSQL queries without a large service framework |
+| PostgreSQL 18 and SQL migrations | Constraints, idempotent observations, ingestion history and reusable analytical views |
+| pytest, Vitest and Testing Library | Pipeline, API, calculation and user-interface regression checks |
+
+The deployment boundary is intentional: a public demonstration can serve verified exports without a continuously running database, while the local application demonstrates the complete data lifecycle.
 
 ## Local setup (PowerShell)
 
@@ -144,7 +193,7 @@ Python's stateless `backend/app/mortgage.py` and the static demo's `frontend/src
 
 In API mode, the browser calculates immediately and sends the scenario in an uncached POST body to `/api/calculators/mortgage` for a complete result check. The endpoint needs neither PostgreSQL nor live statistical APIs, returns typed results and uses `Cache-Control: no-store`. Request bodies are not logged or saved by the application. The page identifies verification failures and differences explicitly; browser calculations remain available. Static mode sends no financial values to a server. Use a trusted API base URL because API verification transmits the entered scenario to that configured server.
 
-The Phase 3 source archive, native PostgreSQL dump and full observation fingerprint created before Phase 4 are retained locally under `.local/recovery/phase3-20261023T010422Z/`. This ignored recovery directory is not part of the public demo. No database migration was needed for Phase 4.
+Local recovery archives and PostgreSQL dumps remain under the ignored `.local/recovery/` directory. They are not part of the repository or public build. Calculators require no financial database tables or additional migrations.
 
 ## Structure
 
@@ -180,7 +229,8 @@ Remove-Item Env:TEST_DATABASE_URL
 
 cd frontend
 npm.cmd test
-npm.cmd run build
+npm.cmd run build:static
+npm.cmd run verify:static
 npm.cmd run preview
 ```
 
@@ -188,16 +238,26 @@ Without `TEST_DATABASE_URL`, PostgreSQL integration tests are skipped. They appl
 
 Financial reference cases in `data/fixtures/mortgage-cases.json` are clearly labelled hypothetical test scenarios, independently evaluated with high-precision Decimal arithmetic; they are not official observations and are excluded from production exports. Frontend tests also compare full TypeScript and Python results for these cases plus 80 reproducible scenarios. Install the Python virtual environment before `npm.cmd test`; `BHC_PYTHON` may point to another Python executable with the backend dependencies installed. The production frontend and standalone calculators do not require Python.
 
-Phase 4 verification passed 311 Python tests with native PostgreSQL integration, 146 frontend tests, API and static production builds, and Edge browser checks at 320, 390, 768 and 1440 pixels. Calculator tests include API disagreement and failure states, while dashboard regression checks cover all eleven indicators and fourteen analytical selections. The static calculators were also checked with FastAPI stopped. A full-record comparison confirmed all 1,155 original observations and all migration records remained unchanged. The existing upstream Starlette TestClient deprecation warning remains; no additional dependency was added just to suppress it.
+The [release verification record](docs/release-verification.md) reports the commands actually run, test results, browser and accessibility checks, measured asset sizes and remaining limitations. Automated checks and practical keyboard checks are evidence for the reviewed flows, not a claim of complete WCAG certification.
 
-For a static build, run this from `frontend/`:
+`verify:static` checks the generated public artifact, including its data files and configuration. Financial regression tests cover zero rates, reverse budgets, cent rounding, reconciliation, input validation and API/static agreement. Calculator requests use POST bodies and `no-store` responses; the public static build sends no calculator inputs to a backend.
 
-```powershell
-npm.cmd run build:static
-npm.cmd run preview
-```
+## Static deployment
 
-`build:static` disables the API URL at compile time, even when `.env.local` enables it for development. Output is `frontend/dist`; relative asset paths support a repository subpath. Opening `index.html` directly cannot load JSON with browser fetch. The build can later be deployed to Cloudflare Pages or GitHub Pages without a running backend. No public deployment has been performed.
+`build:static` disables the API URL at compile time, even when `.env.local` enables it for development. The only directory to publish is `frontend/dist`; relative asset paths and hash navigation support a repository subpath. The build uses the committed official JSON/CSV files and precomputed analytics. Refreshing the source data remains an explicit local pipeline operation, followed by export, review and rebuild.
+
+The [Cloudflare Pages guide](docs/deployment.md) documents a manual Direct Upload release and an optional private GitHub integration. It includes the exact build settings, free-plan limits, smoke checks and instructions for linking the eventual URL to GitHub and an existing portfolio. Deployment, account authorization, remote pushes and visibility changes remain manual actions.
+
+## Limitations and possible improvements
+
+- National series describe different populations and concepts. They cannot supply city-level prices, actual asking rents or personal household budgets.
+- The included history begins in 2020 and is a periodically exported snapshot. Sources have different release schedules and may revise observations later.
+- The 2024 earnings compilation break limits cumulative comparisons. Missing data and incomplete periods reduce the available comparison range.
+- Mortgage simulations hold the entered nominal rate constant. Fees, tax, maintenance and insurance are included only through entered costs; forecasts, early repayments and bank eligibility rules are outside scope.
+- Greater statistical change is not necessarily a better outcome. Correlation and relative rankings do not establish causes or loan suitability.
+- Accessibility checks cover tested workflows; assisted screen-reader testing and broader browser/device testing would provide further evidence.
+
+Possible later work includes longer verified history, additional accessible chart interactions, a documented data-refresh schedule and broader assistive-technology checks. These do not require accounts, commercial features or a hosted database for the public demo.
 
 ## Optional Docker configuration
 

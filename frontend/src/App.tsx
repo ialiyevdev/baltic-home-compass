@@ -168,7 +168,7 @@ function Compare({ data, indicator, retry, showMethodology }: { data: DataBundle
           {hasValues ? <div className="chart-canvas" role="region" aria-label={`${details.title} chart`} aria-describedby="chart-description">
             <Suspense fallback={<div className="chart-empty" role="status">Loading chart…</div>}><ComparisonChart data={chartData} selected={selected} indicator={indicator} /></Suspense>
           </div> : <div className="chart-empty" role="status">No published values are available for the selected countries and period.</div>}
-          <div className="chart-legend" aria-label="Chart legend">{countries.filter(country => selected.includes(country.code)).map(country => <span key={country.code}><svg className="country-symbol" viewBox="0 0 16 16" aria-hidden="true"><CountrySymbol country={country.code} cx={8} cy={8} /></svg>{country.name}</span>)}</div>
+          <div className="chart-legend" role="group" aria-label="Chart legend">{countries.filter(country => selected.includes(country.code)).map(country => <span key={country.code}><svg className="country-symbol" viewBox="0 0 16 16" aria-hidden="true"><CountrySymbol country={country.code} cx={8} cy={8} /></svg>{country.name}</span>)}</div>
           <p className="chart-help">Use the left and right arrow keys on the chart to inspect periods, or open the data table below. Country symbols also distinguish the lines.</p>
         </div>
         <aside className="chart-note">

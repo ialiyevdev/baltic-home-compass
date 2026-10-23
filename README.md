@@ -1,3 +1,5 @@
+https://baltic-home-compass.pages.dev/
+
 # Baltic Home Compass
 
 A portfolio project comparing housing and household economic indicators in Estonia, Latvia and Lithuania. It brings official statistics and personal mortgage scenarios into one interface, while keeping their definitions separate. A house-price index describes price changes; it does not estimate the asking price of a home.

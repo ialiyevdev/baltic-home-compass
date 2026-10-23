@@ -63,11 +63,21 @@ describe('linked housing scenario', () => {
     field('Nominal annual interest rate (%)', '-1');
     expect(screen.getByRole('alert')).toHaveTextContent('Check the scenario inputs');
     expect(screen.getByLabelText('Nominal annual interest rate (%)')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Nominal annual interest rate (%)')).toHaveAttribute('aria-describedby', 'calculator-annual_rate-hint calculator-annual_rate-error');
     expect(screen.queryByLabelText('Mortgage results')).not.toBeInTheDocument();
     field('Nominal annual interest rate (%)', '4');
     expect(screen.getByLabelText('Mortgage results')).toBeVisible();
     field('Purchase price (EUR)', '');
     expect(screen.getByRole('alert')).toHaveTextContent('Enter a number');
+  });
+
+  it('associates rate-offset validation with its input while retaining the format hint', () => {
+    setup();
+    field('Rate changes to compare (percentage points)', 'invalid');
+    const input = screen.getByLabelText('Rate changes to compare (percentage points)');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(input).toHaveAttribute('aria-describedby', 'calculator-rate-offsets-hint calculator-rate-offsets-error');
+    expect(document.getElementById('calculator-rate-offsets-error')).toHaveTextContent('Enter a finite number.');
   });
 
   it('requires a new explicit down payment when units change', () => {

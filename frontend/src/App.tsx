@@ -1,13 +1,23 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import type { MouseEvent } from 'react';
 import {
   calendarPeriods, countries, filterObservations, formatDate, formatPeriod, formatTimestamp,
   frequencyLabel, indicatorDetails, loadData, statusLabel, toCsv, unitLabel,
 } from './data';
 import type { CountryCode, DataBundle, Indicator, IndicatorCode, IngestionAttempt, Observation } from './data';
-import CountrySelector from './CountrySelector';
+import CountrySelector, { CountrySymbol } from './CountrySelector';
 
 type Page = 'compare' | 'analytics' | 'methodology' | 'calculators';
 type LoadState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; data: DataBundle };
+
+const pages: Page[] = ['compare', 'analytics', 'methodology', 'calculators'];
+const calculatorSections = ['mortgage-calculator', 'household-calculator', 'purchase-budget', 'rate-scenarios', 'amortization'];
+
+function locationRoute(): { page: Page; section?: string } | null {
+  const [page, section] = window.location.hash.slice(1).split('/');
+  if (!pages.includes(page as Page)) return null;
+  return { page: page as Page, section: page === 'calculators' && calculatorSections.includes(section) ? section : undefined };
+}
 
 const numberFormat = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
 const ComparisonChart = lazy(() => import('./ComparisonChart'));
@@ -158,7 +168,8 @@ function Compare({ data, indicator, retry, showMethodology }: { data: DataBundle
           {hasValues ? <div className="chart-canvas" role="region" aria-label={`${details.title} chart`} aria-describedby="chart-description">
             <Suspense fallback={<div className="chart-empty" role="status">Loading chart…</div>}><ComparisonChart data={chartData} selected={selected} indicator={indicator} /></Suspense>
           </div> : <div className="chart-empty" role="status">No published values are available for the selected countries and period.</div>}
-          <div className="chart-legend" aria-label="Chart legend">{countries.filter(country => selected.includes(country.code)).map(country => <span key={country.code}><span style={{ backgroundColor: country.color }} />{country.name}</span>)}</div>
+          <div className="chart-legend" aria-label="Chart legend">{countries.filter(country => selected.includes(country.code)).map(country => <span key={country.code}><svg className="country-symbol" viewBox="0 0 16 16" aria-hidden="true"><CountrySymbol country={country.code} cx={8} cy={8} /></svg>{country.name}</span>)}</div>
+          <p className="chart-help">Use the left and right arrow keys on the chart to inspect periods, or open the data table below. Country symbols also distinguish the lines.</p>
         </div>
         <aside className="chart-note">
           <span className="note-number">01 / READING THE DATA</span>
@@ -173,7 +184,7 @@ function Compare({ data, indicator, retry, showMethodology }: { data: DataBundle
       <DataTable observations={displayed} indicator={indicator} />
     </section>
 
-    <section className="scope-note"><span className="scope-icon" aria-hidden="true">i</span><div><h3>Different series, different definitions</h3><p>This view shows each published series at its original frequency. Income, aggregate consumption, price indices and borrowing rates describe different concepts. Household budget and rent-or-buy calculators are planned for later phases.</p></div></section>
+    <section className="scope-note"><span className="scope-icon" aria-hidden="true">i</span><div><h3>Different series, different definitions</h3><p>This view shows each published series at its original frequency. Income, aggregate consumption, price indices and borrowing rates describe different concepts. Calculators use your own assumptions, separately from these official observations.</p></div></section>
   </>;
 }
 
@@ -184,7 +195,7 @@ function Methodology({ data, indicator }: { data: DataBundle; indicator: Indicat
   const missing = observations.length - available;
   return <div className="methodology-page">
     <section className="pipeline-panel" aria-labelledby="pipeline-title">
-      <div><span className="eyebrow">DATA PIPELINE</span><h2 id="pipeline-title">{data.pipeline.status === 'success' ? 'A verified snapshot, ready to explore.' : 'Awaiting the first successful sync.'}</h2><p>Eurostat API → validation → PostgreSQL → static data export</p></div>
+      <div><span className="eyebrow">DATA PIPELINE</span><h2 id="pipeline-title">{data.pipeline.status === 'success' ? 'A verified snapshot, ready to explore.' : 'Awaiting the first successful sync.'}</h2><p>Eurostat and ECB APIs → validation → PostgreSQL → static data export</p></div>
       <span className={`status-pill ${data.pipeline.status === 'success' ? 'is-ready' : ''}`}><span />{data.pipeline.status === 'success' ? 'Snapshot available' : 'Not synced'}</span>
     </section>
     <RefreshWarning attempt={indicator?.latest_attempt !== undefined ? indicator.latest_attempt : data.pipeline.latest_attempt} />
@@ -211,8 +222,9 @@ function Methodology({ data, indicator }: { data: DataBundle; indicator: Indicat
         <section className="method-card limitations"><span className="eyebrow">03 / INTERPRETATION</span><h2>Keep the context</h2><ul>
           {indicatorDetails[indicator?.code ?? 'house_price_index'].reading.map(paragraph => <li key={paragraph}>{paragraph}</li>)}
           <li>Missing values remain missing. Lines stop at missing periods and source flags marking a break in series. Flags are retained in chart tooltips, the table and CSV.</li>
-          <li>The charts display published values without rebasing, interpolation or cross-frequency calculations. No causal explanation is inferred.</li>
+          <li>Compare Countries shows published values without rebasing or interpolation. Analytics labels its aligned and rebased calculations separately. No causal explanation is inferred.</li>
           <li>This static snapshot reflects its retrieval date. Revisions and newer publications require another data sync and export.</li>
+          <li>Derived comparisons are calculations by Baltic Home Compass. Eurostat and the ECB are not responsible for these calculations or their interpretation.</li>
         </ul></section>
       </div>
     </div>
@@ -220,8 +232,10 @@ function Methodology({ data, indicator }: { data: DataBundle; indicator: Indicat
 }
 
 export default function App() {
-  const [page, setPage] = useState<Page>('compare');
-  const [calculatorsOpened, setCalculatorsOpened] = useState(false);
+  const [route, setRoute] = useState(() => locationRoute() ?? { page: 'compare' as Page });
+  const page = route.page;
+  const [calculatorsOpened, setCalculatorsOpened] = useState(page === 'calculators');
+  const [navigationVersion, setNavigationVersion] = useState(0);
   const [state, setState] = useState<LoadState>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const [indicatorCode, setIndicatorCode] = useState<IndicatorCode>('house_price_index');
@@ -230,6 +244,35 @@ export default function App() {
   function changeIndicator(code: IndicatorCode) {
     setIndicatorCode(code);
   }
+
+  function applyLocation() {
+    const next = locationRoute();
+    if (!next) return;
+    setRoute(next);
+    if (next.page === 'calculators') setCalculatorsOpened(true);
+    setNavigationVersion(value => value + 1);
+  }
+
+  function navigate(nextPage: Page, event?: MouseEvent<HTMLAnchorElement>) {
+    if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)) return;
+    event?.preventDefault();
+    if (window.location.hash !== `#${nextPage}`) window.history.pushState(null, '', `#${nextPage}`);
+    applyLocation();
+  }
+
+  useEffect(() => {
+    window.addEventListener('hashchange', applyLocation);
+    window.addEventListener('popstate', applyLocation);
+    return () => {
+      window.removeEventListener('hashchange', applyLocation);
+      window.removeEventListener('popstate', applyLocation);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!navigationVersion || route.section) return;
+    document.getElementById('page-title')?.focus();
+  }, [navigationVersion, route.section]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -246,25 +289,23 @@ export default function App() {
   return <>
     <a href="#main" className="skip-link">Skip to content</a>
     <header className="site-header"><div className="header-inner">
-      <a className="brand" href="./" aria-label="Baltic Home Compass home"><Compass /><span>Baltic Home Compass<span className="brand-subtitle">HOUSING · ECONOMY · EVERYDAY LIFE</span></span></a>
+      <a className="brand" href="#compare" onClick={event => navigate('compare', event)}><Compass /><span>Baltic Home Compass<span className="brand-subtitle">HOUSING · ECONOMY · EVERYDAY LIFE</span></span></a>
       <span className="header-region"><span className="region-line" />Estonia / Latvia / Lithuania</span>
     </div></header>
     <div className="navigation-wrap"><nav className="main-navigation" aria-label="Main navigation">
-      <button className={page === 'compare' ? 'active' : ''} onClick={() => setPage('compare')} aria-current={page === 'compare' ? 'page' : undefined}>Compare Countries</button>
-      <button className={page === 'analytics' ? 'active' : ''} onClick={() => setPage('analytics')} aria-current={page === 'analytics' ? 'page' : undefined}>Analytics</button>
-      <button className={page === 'methodology' ? 'active' : ''} onClick={() => setPage('methodology')} aria-current={page === 'methodology' ? 'page' : undefined}>Data & Methodology</button>
-      <button className={page === 'calculators' ? 'active' : ''} onClick={() => { setCalculatorsOpened(true); setPage('calculators'); }} aria-current={page === 'calculators' ? 'page' : undefined}>Calculators</button>
+      {pages.map(item => <a key={item} href={`#${item}`} className={page === item ? 'active' : ''} onClick={event => navigate(item, event)} aria-current={page === item ? 'page' : undefined}>{item === 'compare' ? 'Compare Countries' : item === 'analytics' ? 'Analytics' : item === 'methodology' ? 'Data & Methodology' : 'Calculators'}</a>)}
     </nav></div>
-    <main id="main" className="page-container">
+    <main id="main" className="page-container" tabIndex={-1}>
       <section className="page-intro">
-        <div><span className="eyebrow">{page === 'compare' ? 'THE BALTIC PICTURE' : page === 'analytics' ? 'CHANGES IN CONTEXT' : page === 'calculators' ? 'YOUR INPUTS. CLEAR ASSUMPTIONS.' : 'BEHIND THE NUMBERS'}</span><h1>{page === 'compare' ? <>Housing, earnings<br className="mobile-break" /> and prices.</> : page === 'analytics' ? 'Comparisons on common ground.' : page === 'calculators' ? 'Explore a home purchase.' : 'Clear sources. Useful context.'}</h1><p>{page === 'compare' ? 'Explore official statistics for Estonia, Latvia and Lithuania. Each series keeps its own dates, units and definition.' : page === 'analytics' ? 'Compare changes over the same periods, with explicit alignment, source definitions and inflation adjustments.' : page === 'calculators' ? 'See how your price, deposit, rate and household budget shape a mortgage scenario.' : 'Where the data comes from, how it is handled, and what it can tell us.'}</p></div>
+        <div><span className="eyebrow">{page === 'compare' ? 'THE BALTIC PICTURE' : page === 'analytics' ? 'CHANGES IN CONTEXT' : page === 'calculators' ? 'YOUR INPUTS. CLEAR ASSUMPTIONS.' : 'BEHIND THE NUMBERS'}</span><h1 id="page-title" tabIndex={-1}>{page === 'compare' ? <>Housing, earnings<br className="mobile-break" /> and prices.</> : page === 'analytics' ? 'Comparisons on common ground.' : page === 'calculators' ? 'Explore a home purchase.' : 'Clear sources. Useful context.'}</h1><p>{page === 'compare' ? 'Explore official statistics for Estonia, Latvia and Lithuania. Each series keeps its own dates, units and definition.' : page === 'analytics' ? 'Compare changes over the same periods, with explicit alignment, source definitions and inflation adjustments.' : page === 'calculators' ? 'See how your price, deposit, rate and household budget shape a mortgage scenario.' : 'Where the data comes from, how it is handled, and what it can tell us.'}</p></div>
         <div className="intro-caption"><span className="caption-rule" /><span>{page === 'calculators' ? <>Personal assumptions.<br />Transparent calculations.</> : <>Official statistics.<br />A shared frame of reference.</>}</span></div>
       </section>
+      {page !== 'calculators' && state.status === 'ready' && state.data.exported_at && <p className="snapshot-caption">Snapshot based on successful sync: <time dateTime={state.data.exported_at}>{formatTimestamp(state.data.exported_at)}</time>. Observation and retrieval dates differ by source; newer releases require a refresh.</p>}
       {page !== 'calculators' && state.status === 'loading' && <section className="state-panel loading-state" role="status"><span className="loading-dot" />Loading the official data snapshot…</section>}
       {page !== 'calculators' && state.status === 'error' && <section className="state-panel error-state" role="alert"><span className="eyebrow">DATA UNAVAILABLE</span><h2>The data could not be loaded.</h2><p>{state.message}</p><button className="button button-primary" onClick={retry}>Retry</button></section>}
-      {page !== 'calculators' && state.status === 'ready' && (page === 'analytics' ? <Suspense fallback={<section className="state-panel loading-state" role="status">Loading analytics…</section>}><Analytics /></Suspense> : <><IndicatorSelector indicators={state.data.indicators} selected={indicator} onChange={changeIndicator} />{page === 'compare' ? <Compare data={state.data} indicator={indicator} retry={retry} showMethodology={() => setPage('methodology')} /> : <Methodology data={state.data} indicator={indicator} />}</>)}
-      {calculatorsOpened && <div hidden={page !== 'calculators'}><Suspense fallback={<section className="state-panel loading-state" role="status">Loading calculators…</section>}><Calculators active={page === 'calculators'} data={state.status === 'ready' ? state.data : undefined} onExplore={(code, section) => { setIndicatorCode(code); setPage(section); }} /></Suspense></div>}
+      {page !== 'calculators' && state.status === 'ready' && (page === 'analytics' ? <Suspense fallback={<section className="state-panel loading-state" role="status">Loading analytics…</section>}><Analytics /></Suspense> : <><IndicatorSelector indicators={state.data.indicators} selected={indicator} onChange={changeIndicator} />{page === 'compare' ? <Compare data={state.data} indicator={indicator} retry={retry} showMethodology={() => navigate('methodology')} /> : <Methodology data={state.data} indicator={indicator} />}</>)}
+      {calculatorsOpened && <div hidden={page !== 'calculators'}><Suspense fallback={<section className="state-panel loading-state" role="status">Loading calculators…</section>}><Calculators active={page === 'calculators'} section={route.section} navigationVersion={navigationVersion} data={state.status === 'ready' ? state.data : undefined} onExplore={(code, section) => { setIndicatorCode(code); navigate(section); }} /></Suspense></div>}
     </main>
-    <footer className="site-footer"><div><span>Baltic Home Compass</span><span>A portfolio project using official statistics.</span></div><span className="phase-label">Phase 4 · Housing scenarios</span></footer>
+    <footer className="site-footer"><div><span>Baltic Home Compass</span><span>A portfolio project using official statistics.</span></div><a className="text-link" href="#methodology" onClick={event => navigate('methodology', event)}>Data & limitations</a></footer>
   </>;
 }

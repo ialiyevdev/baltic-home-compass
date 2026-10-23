@@ -76,7 +76,7 @@ function NumericField({ label, name, value, onChange, hint, error, optional = fa
     <label htmlFor={id}>{label}{optional && <span>Optional</span>}</label>
     <input id={id} name={name} type="number" inputMode="decimal" step="any" min="0" value={value}
       onChange={event => onChange(event.target.value)} aria-invalid={invalid || undefined}
-      aria-describedby={invalid ? `${id}-error` : hint ? `${id}-hint` : undefined} />
+      aria-describedby={[hint ? `${id}-hint` : '', invalid ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined} />
     {hint && <p id={`${id}-hint`}>{hint}</p>}
     {invalid && <p id={`${id}-error`} className="field-error">{error.message}</p>}
   </div>;
@@ -120,9 +120,11 @@ function Benchmark({ data, country }: { data?: DataBundle; country: CountryCode 
 
 type Verification = { state: 'local' | 'pending' | 'matched' } | { state: 'error' | 'mismatch'; message: string };
 
-export default function CalculatorsPage({ data, active = true, onExplore }: {
+export default function CalculatorsPage({ data, active = true, section, navigationVersion = 0, onExplore }: {
   data?: DataBundle;
   active?: boolean;
+  section?: string;
+  navigationVersion?: number;
   onExplore: (indicator: IndicatorCode, section: 'compare' | 'analytics' | 'methodology') => void;
 }) {
   const [values, setValues] = useState<FormValues>(initialValues);
@@ -165,12 +167,19 @@ export default function CalculatorsPage({ data, active = true, onExplore }: {
   const reverse = result?.reverse_budget;
   const schedule = result ? scheduleView === 'annual' ? result.annual_schedule : result.schedule : [];
 
+  useEffect(() => {
+    if (!active || !section) return;
+    const heading = document.getElementById(`${section}-title`);
+    heading?.focus();
+    heading?.scrollIntoView?.({ block: 'start' });
+  }, [active, section, navigationVersion]);
+
   return <div className="calculators-page">
     <div className="calculator-introduction"><p><strong>Illustrative inputs, not market averages.</strong> Change the example purchase price, rate, term and down payment to describe your own scenario. Income starts blank.</p><p>Inputs stay in memory for this page session. {apiCalculationEnabled ? 'API mode sends the scenario to the configured calculation API for a consistency check; it is not stored.' : 'This static build calculates in your browser without sending your scenario.'}</p></div>
-    <nav className="calculator-sections" aria-label="Calculator sections"><a href="#mortgage-calculator">Mortgage</a><a href="#household-calculator">Household budget</a><a href="#purchase-budget">Purchase budget</a><a href="#rate-scenarios">Rate scenarios</a><a href="#amortization">Amortization</a></nav>
+    <nav className="calculator-sections" aria-label="Calculator sections"><a href="#calculators/mortgage-calculator">Mortgage</a><a href="#calculators/household-calculator">Household budget</a><a href="#calculators/purchase-budget">Purchase budget</a><a href="#calculators/rate-scenarios">Rate scenarios</a><a href="#calculators/amortization">Amortization</a></nav>
 
     <section id="mortgage-calculator" className="calculator-section" aria-labelledby="mortgage-calculator-title">
-      <div className="section-heading"><span className="eyebrow">01 / PURCHASE & LOAN</span><h2 id="mortgage-calculator-title">Mortgage calculator</h2><p>A constant nominal annual rate, monthly payments and full amortization. Fees are excluded from the interest rate and added only through your cost inputs.</p></div>
+      <div className="section-heading"><span className="eyebrow">01 / PURCHASE & LOAN</span><h2 id="mortgage-calculator-title" tabIndex={-1}>Mortgage calculator</h2><p>A constant nominal annual rate, monthly payments and full amortization. Fees are excluded from the interest rate and added only through your cost inputs.</p></div>
       <div className="mortgage-layout"><div className="mortgage-inputs">
         <div className="calculator-field"><label htmlFor="calculator-country">Country for benchmark context</label><select id="calculator-country" value={values.country} onChange={event => update('country', event.target.value)}>{countries.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</select><p>Country does not change formulas, costs or borrowing limits.</p></div>
         <div className="calculator-form-grid">
@@ -196,7 +205,7 @@ export default function CalculatorsPage({ data, active = true, onExplore }: {
       </div></div>
     </section>
 
-    <section id="household-calculator" className="calculator-section" aria-labelledby="household-calculator-title"><div className="section-heading"><span className="eyebrow">02 / YOUR MONTHLY BUDGET</span><h2 id="household-calculator-title">Household affordability</h2><p>Use your actual monthly net household income and entered expenses. The reference percentage is your own scenario assumption, not an official lending limit.</p></div>
+    <section id="household-calculator" className="calculator-section" aria-labelledby="household-calculator-title"><div className="section-heading"><span className="eyebrow">02 / YOUR MONTHLY BUDGET</span><h2 id="household-calculator-title" tabIndex={-1}>Household affordability</h2><p>Use your actual monthly net household income and entered expenses. The reference percentage is your own scenario assumption, not an official lending limit.</p></div>
       <div className="calculator-form-grid household-inputs">
         <NumericField name="monthly_income" label="Monthly net household income (EUR)" value={values.monthly_income} onChange={value => update('monthly_income', value)} optional hint="Blank leaves income-based results unavailable. Zero is treated as an entered zero." error={error} />
         <NumericField name="monthly_debts" label="Existing debt payments / month (EUR)" value={values.monthly_debts} onChange={value => update('monthly_debts', value)} optional hint="Other debts, excluding this mortgage. Blank means zero." error={error} />
@@ -217,7 +226,7 @@ export default function CalculatorsPage({ data, active = true, onExplore }: {
       </div>}
     </section>
 
-    <section id="purchase-budget" className="calculator-section" aria-labelledby="purchase-budget-title"><div className="section-heading"><span className="eyebrow">03 / WORK BACK FROM A PAYMENT</span><h2 id="purchase-budget-title">Purchase budget</h2><p>Find the loan and illustrative purchase price supported by a chosen regular monthly principal-and-interest payment, using the rate, term and down-payment assumption above.</p></div>
+    <section id="purchase-budget" className="calculator-section" aria-labelledby="purchase-budget-title"><div className="section-heading"><span className="eyebrow">03 / WORK BACK FROM A PAYMENT</span><h2 id="purchase-budget-title" tabIndex={-1}>Purchase budget</h2><p>Find the loan and illustrative purchase price supported by a chosen regular monthly principal-and-interest payment, using the rate, term and down-payment assumption above.</p></div>
       <div className="purchase-budget-layout"><NumericField name="desired_monthly_payment" label="Desired maximum mortgage payment / month (EUR)" value={values.desired_monthly_payment} onChange={value => update('desired_monthly_payment', value)} hint="Principal and interest only. Additional property costs are excluded from this payment target." error={error} />
         {reverse?.status === 'available' ? <div className="reverse-results" aria-label="Purchase budget results"><dl className="calculator-facts">
           <div><dt>Supported loan principal</dt><dd>{euro.format(reverse.loan_principal!)}</dd></div><div><dt>Illustrative purchase price</dt><dd>{euro.format(reverse.property_price!)}</dd></div><div><dt>Required down payment</dt><dd>{euro.format(reverse.down_payment!)}</dd></div><div><dt>Regular mortgage payment</dt><dd>{euro.format(reverse.monthly_payment!)}</dd></div><div><dt>Total interest</dt><dd>{euro.format(reverse.total_interest!)}</dd></div><div><dt>Total mortgage repayment</dt><dd>{euro.format(reverse.total_repayment!)}</dd></div>
@@ -225,17 +234,18 @@ export default function CalculatorsPage({ data, active = true, onExplore }: {
       </div>
     </section>
 
-    <section id="rate-scenarios" className="calculator-section" aria-labelledby="rate-scenarios-title"><div className="section-heading"><span className="eyebrow">04 / COMPARE CONSTANT RATES</span><h2 id="rate-scenarios-title">Interest rate scenarios</h2><p>Every row applies a constant rate to the same initial principal and full term. These are alternative scenarios, not forecasts or a simulation of a rate reset part way through a mortgage.</p></div>
-      <div className="calculator-field rate-offset-field"><label htmlFor="calculator-rate-offsets">Rate changes to compare (percentage points)</label><input id="calculator-rate-offsets" type="text" value={values.rate_offsets} onChange={event => update('rate_offsets', event.target.value)} aria-invalid={error?.field === 'rate_offsets' || undefined} aria-describedby="calculator-rate-offsets-hint" /><p id="calculator-rate-offsets-hint">Comma-separated differences from the base rate, for example −1, 1, 2, 3. The base case is always included; blank compares only the base.</p>{error?.field === 'rate_offsets' && <p className="field-error">{error.message}</p>}</div>
+    <section id="rate-scenarios" className="calculator-section" aria-labelledby="rate-scenarios-title"><div className="section-heading"><span className="eyebrow">04 / COMPARE CONSTANT RATES</span><h2 id="rate-scenarios-title" tabIndex={-1}>Interest rate scenarios</h2><p>Every row applies a constant rate to the same initial principal and full term. These are alternative scenarios, not forecasts or a simulation of a rate reset part way through a mortgage.</p></div>
+      <div className="calculator-field rate-offset-field"><label htmlFor="calculator-rate-offsets">Rate changes to compare (percentage points)</label><input id="calculator-rate-offsets" type="text" value={values.rate_offsets} onChange={event => update('rate_offsets', event.target.value)} aria-invalid={error?.field === 'rate_offsets' || undefined} aria-describedby={`calculator-rate-offsets-hint${error?.field === 'rate_offsets' ? ' calculator-rate-offsets-error' : ''}`} /><p id="calculator-rate-offsets-hint">Comma-separated differences from the base rate, for example −1, 1, 2, 3. The base case is always included; blank compares only the base.</p>{error?.field === 'rate_offsets' && <p id="calculator-rate-offsets-error" className="field-error">{error.message}</p>}</div>
       {result && <div className="table-scroll calculator-table-scroll" tabIndex={0} role="region" aria-label="Interest rate scenario comparison"><table><caption>Differences are relative to the base case. Payment-to-income uses mortgage principal and interest only; ratio differences are percentage points.</caption><thead><tr><th scope="col">Annual nominal rate</th><th scope="col">Monthly payment</th><th scope="col">Total interest</th><th scope="col">Total repayment</th><th scope="col">Payment / income</th></tr></thead><tbody>{result.rate_scenarios.map(scenario => <tr key={scenario.offset} className={scenario.offset === 0 ? 'base-scenario' : ''}>
         <th scope="row">{rate.format(scenario.annual_rate)}%<small>{scenario.offset === 0 ? 'Base case' : `${change.format(scenario.offset)} pp`}</small></th>
         {scenario.status === 'available' ? <><td>{euro.format(scenario.monthly_payment!)}<small>Δ {euroChange.format(scenario.payment_difference!)}</small></td><td>{euro.format(scenario.total_interest!)}<small>Δ {euroChange.format(scenario.total_interest_difference!)}</small></td><td>{euro.format(scenario.total_repayment!)}<small>Δ {euroChange.format(scenario.total_repayment_difference!)}</small></td><td>{scenario.mortgage_to_income === null ? 'Income not available' : `${number.format(scenario.mortgage_to_income)}%`}{scenario.ratio_difference !== null && <small>Δ {change.format(scenario.ratio_difference)} pp</small>}</td></> : <td colSpan={4}>Unavailable: {scenario.reason}</td>}
       </tr>)}</tbody></table></div>}
     </section>
 
-    <section id="amortization" className="calculator-section" aria-labelledby="amortization-title"><div className="section-heading"><span className="eyebrow">05 / HOW THE LOAN IS REPAID</span><h2 id="amortization-title">Amortization schedule</h2><p>Payments reconcile to cents each month. The final payment clears the remaining balance; an annual row contains up to twelve monthly payments.</p></div>
+    <section id="amortization" className="calculator-section" aria-labelledby="amortization-title"><div className="section-heading"><span className="eyebrow">05 / HOW THE LOAN IS REPAID</span><h2 id="amortization-title" tabIndex={-1}>Amortization schedule</h2><p>Payments reconcile to cents each month. The final payment clears the remaining balance; an annual row contains up to twelve monthly payments.</p></div>
       {result && result.schedule.length > 0 ? <div className="amortization-panel"><div className="calculator-view-buttons" aria-label="Repayment visualization"><button aria-pressed={chartView === 'balance'} onClick={() => setChartView('balance')}>Remaining balance</button><button aria-pressed={chartView === 'payments'} onClick={() => setChartView('payments')}>Annual payments</button><button aria-pressed={chartView === 'mix'} onClick={() => setChartView('mix')}>Repayment mix</button></div>
-        {active && <div className="calculator-chart" role="region" aria-label="Mortgage repayment chart"><Suspense fallback={<p className="chart-empty">Loading chart…</p>}><CalculatorChart result={result} view={chartView} /></Suspense></div>}
+        <p id="repayment-chart-description" className="chart-help">{chartView === 'balance' ? 'Remaining principal after each year, starting at the initial loan.' : chartView === 'payments' ? 'Annual principal and interest payments. Hatched bars identify interest.' : 'Total principal and interest over the full term. Hatched bars identify interest.'} Use the arrow keys on the chart to inspect values, or open the repayment schedule below for exact amounts.</p>
+        {active && <div className="calculator-chart" role="region" aria-label="Mortgage repayment chart" aria-describedby="repayment-chart-description"><Suspense fallback={<p className="chart-empty" role="status">Loading chart…</p>}><CalculatorChart result={result} view={chartView} /></Suspense></div>}
         <div className="repayment-totals"><p><span>Loan principal</span><strong>{euro.format(result.mortgage.loan_principal)}</strong></p><p><span>Total interest</span><strong>{euro.format(result.mortgage.total_interest)}</strong></p><p><span>Final payment</span><strong>{euro.format(result.mortgage.final_payment)}</strong></p></div>
         <details className="data-details"><summary>View the repayment schedule <span aria-hidden="true">↗</span></summary><div className="schedule-controls"><label>Schedule view<select value={scheduleView} onChange={event => setScheduleView(event.target.value as 'annual' | 'monthly')}><option value="annual">Annual summary</option><option value="monthly">Monthly payments</option></select></label><p>Periods count from the first payment, without an assumed calendar start date.</p></div><div className="table-scroll calculator-schedule-scroll" tabIndex={0} role="region" aria-label="Mortgage amortization table"><table><caption>{scheduleView === 'annual' ? 'Annual payment groups' : 'Monthly payments'}. Final balance: {euro.format(result.schedule.at(-1)!.balance)}.</caption><thead><tr><th scope="col">{scheduleView === 'annual' ? 'Year' : 'Month'}</th><th scope="col">Payment</th><th scope="col">Principal repaid</th><th scope="col">Interest paid</th><th scope="col">Balance</th><th scope="col">Cumulative interest</th></tr></thead><tbody>{schedule.map(row => <tr key={'year' in row ? row.year : row.month}><th scope="row">{'year' in row ? row.year : row.month}</th><td>{euro.format(row.payment)}</td><td>{euro.format(row.principal)}</td><td>{euro.format(row.interest)}</td><td>{euro.format(row.balance)}</td><td>{euro.format(row.cumulative_interest)}</td></tr>)}</tbody></table></div></details>
       </div> : result && <p className="calculator-notice">A zero loan principal has no mortgage repayment schedule.</p>}

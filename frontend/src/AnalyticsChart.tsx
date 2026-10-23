@@ -1,6 +1,7 @@
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { countries, formatPeriod } from './data';
 import type { AnalyticsSeries, Comparison } from './analytics';
+import { CountrySymbol } from './CountrySelector';
 
 const numberFormat = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
 
@@ -18,8 +19,8 @@ export default function AnalyticsChart({ comparison, series, end }: { comparison
   return <ResponsiveContainer width="100%" height="100%" minWidth={1}>
     <LineChart data={data} margin={{ top: 18, right: 15, left: 0, bottom: 5 }} accessibilityLayer>
       <CartesianGrid vertical={false} stroke="#e5e9e4" strokeDasharray="3 4" />
-      <XAxis dataKey="period" tickFormatter={formatPeriod} minTickGap={50} axisLine={false} tickLine={false} tickMargin={14} tick={{ fill: '#65716e', fontSize: 11 }} />
-      <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} width={46} tickMargin={10} tick={{ fill: '#65716e', fontSize: 11 }} tickFormatter={value => numberFormat.format(Number(value))} />
+      <XAxis dataKey="period" tickFormatter={formatPeriod} minTickGap={50} axisLine={false} tickLine={false} tickMargin={14} tick={{ fill: '#526454', fontSize: 12 }} />
+      <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} width={52} tickMargin={10} tick={{ fill: '#526454', fontSize: 12 }} tickFormatter={value => numberFormat.format(Number(value))} />
       <ReferenceLine y={percentagePoints ? 0 : 100} stroke="#acbbae" strokeDasharray="4 4" />
       <Tooltip content={({ active, label }) => {
         if (!active || label === undefined) return null;
@@ -39,7 +40,7 @@ export default function AnalyticsChart({ comparison, series, end }: { comparison
       {series.map(item => <Line key={`${item.country}:${item.component}`} type="linear" dataKey={`${item.country}:${item.component}`}
         stroke={countries.find(country => country.code === item.country)?.color}
         strokeDasharray={components.indexOf(item.component) === 0 ? undefined : '6 4'}
-        strokeWidth={2.3} dot={comparison.frequency === 'A' || periods.length === 1 ? { r: 2.2 } : false}
+        strokeWidth={2.3} dot={({ cx, cy, index, value }) => typeof value === 'number' && cx !== undefined && cy !== undefined && index !== undefined && (comparison.frequency === 'A' || index % Math.max(1, Math.ceil(periods.length / 8)) === 0 || index === periods.length - 1) ? <CountrySymbol country={item.country} cx={cx} cy={cy} /> : <g />}
         activeDot={{ r: 4 }} connectNulls={false} isAnimationActive={false} />)}
     </LineChart>
   </ResponsiveContainer>;

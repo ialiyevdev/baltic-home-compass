@@ -108,12 +108,12 @@ describe('analytical controls and explanations', () => {
     await screen.findByRole('combobox', { name: 'Analysis' });
     expect(screen.getByText('Greatest change · tied')).toBeVisible();
     expect(screen.getByText('Estonia, Latvia')).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Lithuania (LT)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lithuania LT' }));
     expect(screen.getByText(/selected countries share the same change/)).toHaveTextContent('+20 %');
     fireEvent.change(screen.getByRole('combobox', { name: 'Analysis' }), { target: { value: 'housing_inflation' } });
     fireEvent.click(screen.getByRole('button', { name: 'Inflation adjusted' }));
     expect(await screen.findByTestId('analytics-chart')).toHaveAttribute('data-components', 'real_hpi');
-    expect(screen.getByRole('button', { name: 'Lithuania (LT)' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Lithuania LT' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('keeps missing aligned observations visible in the table', async () => {

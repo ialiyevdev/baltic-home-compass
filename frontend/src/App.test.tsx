@@ -1,10 +1,12 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import type { DataBundle } from './data';
 
 vi.mock('./ComparisonChart', () => ({ default: () => <div data-testid="comparison-chart" /> }));
 vi.mock('./CalculatorChart', () => ({ default: () => <div data-testid="calculator-chart" /> }));
+
+beforeEach(() => { window.history.replaceState(null, '', '#compare'); });
 
 const emptyBundle: DataBundle = {
   schema_version: 1, exported_at: null,
@@ -73,13 +75,13 @@ describe('data states', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Statistics unavailable')));
     render(<App />);
     await screen.findByRole('alert');
-    fireEvent.click(screen.getByRole('button', { name: 'Calculators' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Calculators' }));
     await screen.findByRole('heading', { name: 'Mortgage calculator' });
     expect(screen.queryByRole('heading', { name: 'The data could not be loaded.' })).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Purchase price (EUR)'), { target: { value: '160000' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Compare Countries' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Compare Countries' }));
     expect(screen.getByRole('heading', { name: 'The data could not be loaded.' })).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Calculators' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Calculators' }));
     expect(screen.getByLabelText('Purchase price (EUR)')).toHaveValue(160000);
     expect(screen.getByLabelText('Mortgage results')).toBeVisible();
   });
@@ -88,9 +90,9 @@ describe('data states', () => {
     respond(emptyBundle);
     render(<App />);
     expect(await screen.findByRole('heading', { name: 'The comparison is ready for its first data sync.' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Calculators' })).toBeEnabled();
+    expect(screen.getByRole('link', { name: 'Calculators' })).toBeEnabled();
     expect(screen.queryByTestId('comparison-chart')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Data & Methodology' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Data & Methodology' }));
     expect(screen.getByRole('heading', { name: 'Awaiting the first successful sync.' })).toBeVisible();
   });
 
@@ -99,7 +101,7 @@ describe('data states', () => {
     render(<App />);
     await screen.findByRole('heading', { name: 'House price index' });
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('button', { name: 'Analytics' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Analytics' })).toBeVisible();
     expect(screen.queryByRole('combobox', { name: 'Analysis' })).not.toBeInTheDocument();
   });
 
@@ -117,7 +119,7 @@ describe('data states', () => {
     respond({ ...populatedBundle, pipeline: { status: 'success', last_success_at: null, latest_attempt: { status: 'failed', started_at: '2026-01-01T00:00:00Z', finished_at: '2026-01-01T00:00:01Z', error: 'Upstream timeout' } } });
     render(<App />);
     await screen.findByRole('heading', { name: 'House price index' });
-    fireEvent.click(screen.getByRole('button', { name: 'Data & Methodology' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Data & Methodology' }));
     expect(screen.getByRole('status')).toHaveTextContent('The latest refresh failed.');
     expect(screen.getByRole('status')).toHaveTextContent('Upstream timeout');
   });
@@ -128,10 +130,11 @@ describe('comparison controls', () => {
     respond(populatedBundle);
     render(<App />);
     await screen.findByRole('heading', { name: 'House price index' });
-    fireEvent.click(screen.getByRole('button', { name: 'Lithuania (LT)' }));
-    expect(screen.getByRole('button', { name: 'Lithuania (LT)' })).toHaveAttribute('aria-pressed', 'false');
-    fireEvent.click(screen.getByRole('button', { name: 'Latvia (LV)' }));
-    expect(screen.getByRole('button', { name: 'Latvia (LV)' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Lithuania LT' })).toHaveTextContent('Lithuania LT');
+    fireEvent.click(screen.getByRole('button', { name: 'Lithuania LT' }));
+    expect(screen.getByRole('button', { name: 'Lithuania LT' })).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(screen.getByRole('button', { name: 'Latvia LV' }));
+    expect(screen.getByRole('button', { name: 'Latvia LV' })).toHaveAttribute('aria-pressed', 'true');
     fireEvent.change(screen.getByLabelText('From'), { target: { value: '2024-Q2' } });
     fireEvent.click(screen.getByText('View the displayed data'));
     const table = screen.getByRole('table');
@@ -146,13 +149,13 @@ describe('comparison controls', () => {
     respond(multiBundle);
     render(<App />);
     await screen.findByRole('heading', { name: 'House price index' });
-    fireEvent.click(screen.getByRole('button', { name: 'Lithuania (LT)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lithuania LT' }));
     fireEvent.change(screen.getByRole('combobox', { name: 'From' }), { target: { value: '2024-Q2' } });
     fireEvent.change(screen.getByRole('combobox', { name: 'Indicator' }), { target: { value: 'annual_net_earnings' } });
     expect(screen.getByRole('heading', { name: 'Annual net earnings' })).toBeVisible();
     expect(screen.getByRole('combobox', { name: 'From' })).toHaveValue('2023');
     expect(screen.getByRole('combobox', { name: 'To' })).toHaveValue('2024');
-    expect(screen.getByRole('button', { name: 'Lithuania (LT)' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Lithuania LT' })).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByText('Synthetic source note: a compiler change creates a break in 2024.')).toBeVisible();
     expect(screen.getByRole('region', { name: 'Latest available value in the selected period' })).toHaveTextContent('EUR / year');
     expect(screen.getByRole('region', { name: 'Latest available value in the selected period' })).toHaveTextContent('break in time series');
@@ -172,7 +175,7 @@ describe('comparison controls', () => {
     render(<App />);
     await screen.findByRole('heading', { name: 'House price index' });
     fireEvent.change(screen.getByRole('combobox', { name: 'Indicator' }), { target: { value: 'annual_net_earnings' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Data & Methodology' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Data & Methodology' }));
     expect(screen.getByRole('heading', { name: 'Annual net earnings' })).toBeVisible();
     expect(screen.getByText('earn_nt_net ↗')).toBeVisible();
     expect(screen.getByText('ecase=P1_NCH_AW100')).toBeVisible();
@@ -191,5 +194,52 @@ describe('comparison controls', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Indicator' }), { target: { value: 'annual_net_earnings' } });
     expect(screen.getByRole('heading', { name: 'Annual net earnings is not available in this snapshot.' })).toBeVisible();
     expect(screen.queryByTestId('comparison-chart')).not.toBeInTheDocument();
+  });
+});
+
+describe('shareable navigation and source context', () => {
+  it('opens a calculator section from its fragment and focuses its heading', async () => {
+    window.history.replaceState(null, '', '#calculators/amortization');
+    respond(populatedBundle);
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: 'Amortization schedule' })).toHaveFocus();
+    expect(screen.getByRole('link', { name: 'Calculators' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Amortization' })).toHaveAttribute('href', '#calculators/amortization');
+    expect(screen.getByLabelText('Mortgage results')).toBeVisible();
+  });
+
+  it('updates the address and keyboard destination, and follows history changes', async () => {
+    respond(populatedBundle);
+    render(<App />);
+    await screen.findByRole('heading', { name: 'House price index' });
+    fireEvent.click(screen.getByRole('link', { name: 'Data & Methodology' }));
+    expect(window.location.hash).toBe('#methodology');
+    expect(screen.getByRole('heading', { name: 'Clear sources. Useful context.' })).toHaveFocus();
+    act(() => {
+      window.history.replaceState(null, '', '#compare');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    expect(screen.getByRole('link', { name: 'Compare Countries' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('heading', { name: 'Housing, earnings and prices.' })).toHaveFocus();
+  });
+
+  it('keeps the active page when the skip link fragment is used', async () => {
+    window.history.replaceState(null, '', '#calculators');
+    respond(populatedBundle);
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Mortgage calculator' });
+    act(() => {
+      window.history.replaceState(null, '', '#main');
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    expect(screen.getByRole('heading', { name: 'Explore a home purchase.' })).toBeVisible();
+  });
+
+  it('shows the exported sync timestamp separately from individual retrieval dates', async () => {
+    respond({ ...populatedBundle, exported_at: '2026-10-21T14:32:00Z' });
+    render(<App />);
+    const timestamp = await screen.findByText('21 Oct 2026, 14:32 UTC');
+    expect(timestamp).toHaveAttribute('datetime', '2026-10-21T14:32:00Z');
+    expect(timestamp.parentElement).toHaveTextContent('Observation and retrieval dates differ by source');
   });
 });
